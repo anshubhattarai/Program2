@@ -23,9 +23,11 @@ public class HeuristicAgent implements Agent {
     private int w, h;
 
     private boolean debug = true;
-    private double[][] dangers;
+    private double[][] pitDangers;
     private boolean[][] visited;
     private boolean[][] shoot;
+
+    private double[][] supmuwDanger;
 
     private LinkedList<Action> nextActions = new LinkedList<Action>();
 
@@ -37,7 +39,8 @@ public class HeuristicAgent implements Agent {
     public HeuristicAgent(int width, int height) {
         w = width;
         h = height;
-        dangers = new double[w][h];
+        pitDangers = new double[w][h];
+        supmuwDanger = new double[w][h];
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
     }
@@ -102,8 +105,14 @@ public class HeuristicAgent implements Agent {
         // Calculate the neighbor branches
         int[][] branches = getNeighbors(x, y);
 
+
+        //Case when supmuw behaves like wumpus. Need to estimate these locations and avoid them
+        if (player.hasStench() && player.hasMoo()){
+            estimateDangerLocationForSupmuw(branches);
+        }
+
         // Shoot an arrow to every non visited tiles if senses a stench
-        if (player.hasStench() && player.hasArrows()) {
+        if (player.hasStench() && player.hasArrows() && !player.hasMoo()) {
             // Apply killer instinct
             for(int[] branch : branches) {
                 if (!visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
@@ -118,42 +127,12 @@ public class HeuristicAgent implements Agent {
 
         // Mark non visited neighbors has dangerous
         if (player.hasBreeze()) {
-            boolean knowPitPosition = false;
-            // Verify if a pit was already found
-            for(int[] branch : branches) {
-                if (dangers[branch[0]][branch[1]] == 1) {
-                    knowPitPosition = true;
-                    break;
-                }
-            }
-            // Estimate the pit location
-            if (!knowPitPosition) {
-                // Increase by 50% the probability of having some danger
-                for(int[] branch : branches) {
-                    if (!visited[branch[0]][branch[1]]) {
-                        if (dangers[branch[0]][branch[1]] < 1) {
-                            dangers[branch[0]][branch[1]] += 0.5;
-                        }
-                        // Pit was found
-                        if (dangers[branch[0]][branch[1]] == 1) {
-                            knowPitPosition = true;
-                        }
-                    }
-                }
-                // If a pit was found clear the dangers from other tiles
-                if (knowPitPosition) {
-                    for (int[] branch : branches) {
-                        if (dangers[branch[0]][branch[1]]  < 1) {
-                            dangers[branch[0]][branch[1]] = 0.0;
-                        }
-                    }
-                }
-            }
+            estimatePitLocation(branches);
         } else {
-            // From this tile nothing has sensed so set the neighbors to dangers
+            // From this tile nothing has sensed so set the neighbors to pitDangers
             for (int[] branch : branches) {
-                if (dangers[branch[0]][branch[1]] < 1) {
-                    dangers[branch[0]][branch[1]] = 0.0;
+                if (pitDangers[branch[0]][branch[1]] < 1) {
+                    pitDangers[branch[0]][branch[1]] = 0.0;
                 }
             }
         }
@@ -179,6 +158,74 @@ public class HeuristicAgent implements Agent {
 
         // Auto execute the first action
         return nextActions.poll();
+    }
+
+    private void estimateDangerLocationForSupmuw(int[][] branches) {
+        boolean knowSupmuwLocation = false;
+        // Verify if a supmuw was already found
+        for(int[] branch : branches) {
+            if (supmuwDanger[branch[0]][branch[1]] == 1) {
+                knowSupmuwLocation = true;
+                break;
+            }
+        }
+        // Estimate the supmuw location
+        if (!knowSupmuwLocation) {
+            // Increase by 50% the probability of having some danger
+            for(int[] branch : branches) {
+                if (!visited[branch[0]][branch[1]]) {
+                    if (supmuwDanger[branch[0]][branch[1]] < 1) {
+                        supmuwDanger[branch[0]][branch[1]] += 0.5;
+                    }
+                    // Supmuw was found
+                    if (supmuwDanger[branch[0]][branch[1]] == 1) {
+                        knowSupmuwLocation = true;
+                    }
+                }
+            }
+            // If a pit was found clear supmuw danger from other tiles
+            if (knowSupmuwLocation) {
+                for (int[] branch : branches) {
+                    if (supmuwDanger[branch[0]][branch[1]]  < 1) {
+                        supmuwDanger[branch[0]][branch[1]] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
+    private void estimatePitLocation(int[][] branches) {
+        boolean knowPitPosition = false;
+        // Verify if a pit was already found
+        for(int[] branch : branches) {
+            if (pitDangers[branch[0]][branch[1]] == 1) {
+                knowPitPosition = true;
+                break;
+            }
+        }
+        // Estimate the pit location
+        if (!knowPitPosition) {
+            // Increase by 50% the probability of having some danger
+            for(int[] branch : branches) {
+                if (!visited[branch[0]][branch[1]]) {
+                    if (pitDangers[branch[0]][branch[1]] < 1) {
+                        pitDangers[branch[0]][branch[1]] += 0.5;
+                    }
+                    // Pit was found
+                    if (pitDangers[branch[0]][branch[1]] == 1) {
+                        knowPitPosition = true;
+                    }
+                }
+            }
+            // If a pit was found clear the pitDangers from other tiles
+            if (knowPitPosition) {
+                for (int[] branch : branches) {
+                    if (pitDangers[branch[0]][branch[1]]  < 1) {
+                        pitDangers[branch[0]][branch[1]] = 0.0;
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -274,9 +321,18 @@ public class HeuristicAgent implements Agent {
         } else {
             // If senses a breeze avoid unvisited path
             if (player.hasBreeze()) {
-                if (dangers[to[0]][to[1]] < 1) {
+                if (pitDangers[to[0]][to[1]] < 1) {
                     sum += 10;
-                } else if (dangers[to[0]][to[1]] == 1) {
+                } else if (pitDangers[to[0]][to[1]] == 1) {
+                    // Avoid tiles marked as 100% danger
+                    sum += 100;
+                }
+            }
+            //If senses a moo and stench, avoid unvisited path
+            if(player.hasMoo() && player.hasStench()){
+                if (supmuwDanger[to[0]][to[1]] < 1) {
+                    sum += 10;
+                } else if (supmuwDanger[to[0]][to[1]] == 1) {
                     // Avoid tiles marked as 100% danger
                     sum += 100;
                 }
