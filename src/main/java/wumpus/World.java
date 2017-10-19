@@ -1,7 +1,6 @@
 package wumpus;
 
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 
 import wumpus.Environment.Action;
 import wumpus.Environment.Element;
@@ -30,7 +29,7 @@ public class World {
     private int maxSteps = DEFAULT_MAX_STEPS;
 
     private boolean randomize = true;
-    private HashMap<Integer, Environment.Element> items = new HashMap<Integer, Element>();
+    private HashMap<Integer, Set<Element>> items = new HashMap<Integer, Set<Element>>();
 
     private String agentName;
     private final Player player;
@@ -171,13 +170,16 @@ public class World {
      */
     private void setItem(Element element, int x, int y) {
         Tile tile = getPosition(x, y);
+        Set<Element> elements = new HashSet<Element>();
+        elements.addAll(tile.getElements());
         if (canElementBeInserted(tile, element)) {
             tile.setItem(element);
+            elements.add(element);
         } else {
             throw new InternalError("Tile is not empty!");
         }
         // Saves the items position for later retrieval
-        items.put(tile.getIndex(), element);
+        items.put(tile.getIndex(), elements);
         // Turn off randomization
         randomize = false;
     }
@@ -314,7 +316,9 @@ public class World {
         } else {
             for (int index : items.keySet()) {
                 Tile tile = getPosition(index);
-                tile.setItem(items.get(index));
+                for (Element element: items.get(index)) {
+                    tile.setItem(element);
+                }
             }
         }
     }

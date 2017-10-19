@@ -1,6 +1,7 @@
 package wumpus;
 
 import java.util.HashSet;
+import java.util.Set;
 
 import wumpus.Environment.Element;
 
@@ -114,5 +115,9 @@ public class Tile {
      */
     public void setItem(Element element)  {
         elements.add(element);
+    }
+
+    public Set<Element> getElements(){
+        return elements;
     }
 }
