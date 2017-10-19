@@ -119,6 +119,10 @@ public class HeuristicAgent implements Agent {
             estimateDangerLocationForSupmuw(branches);
         }
 
+        if(player.hasMoo() && !player.hasStench()){
+            estimateSupmuwLocation(branches);
+        }
+
         // Shoot an arrow to every non visited tiles if senses a stench
         if (player.hasStench() && player.hasArrows() && !player.hasMoo()) {
             // Apply killer instinct
@@ -236,6 +240,41 @@ public class HeuristicAgent implements Agent {
         }
     }
 
+
+    private void estimateSupmuwLocation(int[][] branches) {
+        boolean knowSupmuwLocation = false;
+        // Verify if a pit was already found
+        for(int[] branch : branches) {
+            if (supmuwBenefit[branch[0]][branch[1]] == 1) {
+                knowSupmuwLocation = true;
+                break;
+            }
+        }
+        // Estimate the supmuw location
+        if (!knowSupmuwLocation) {
+            // Increase by 50% the probability of having supmuw
+            for(int[] branch : branches) {
+                if (!visited[branch[0]][branch[1]]) {
+                    if (supmuwBenefit[branch[0]][branch[1]] < 1) {
+                        supmuwBenefit[branch[0]][branch[1]] += 0.5;
+                    }
+                    // supmuw was found
+                    if (supmuwBenefit[branch[0]][branch[1]] == 1) {
+                        knowSupmuwLocation = true;
+                    }
+                }
+            }
+            // If supmuw was found clear the chances from other tiles
+            if (knowSupmuwLocation) {
+                for (int[] branch : branches) {
+                    if (supmuwBenefit[branch[0]][branch[1]]  < 1) {
+                        supmuwBenefit[branch[0]][branch[1]] = 0.0;
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Gets the adjacent tiles of the given coordinates.
      * @param x The tile X coordinate
@@ -336,6 +375,23 @@ public class HeuristicAgent implements Agent {
                     sum += 100;
                 }
             }
+
+            if (player.hasBreeze() && player.hasMoo()) {
+                if(supmuwBenefit[to[0]][to[1]] == 1){
+                    sum+=5;
+                }
+                //Case when you the square has chance of both pit and supmuw. Unless there is other safe way, visit it.
+                else if (supmuwBenefit[to[0]][to[1]] == 1 && pitDangers[to[0]][to[1]] < 1) {
+                    sum += 7;
+                }
+                else if (pitDangers[to[0]][to[1]] < 1) {
+                    sum += 10;
+                } else if (pitDangers[to[0]][to[1]] == 1) {
+                    // Avoid tiles marked as 100% danger
+                    sum += 100;
+                }
+            }
+
             //If senses a moo and stench, avoid unvisited path
             if(player.hasMoo() && player.hasStench()){
                 if (supmuwDanger[to[0]][to[1]] < 1) {
@@ -348,7 +404,9 @@ public class HeuristicAgent implements Agent {
 
             //If it is visiting lone standing supmuw for the first time it will get some food
             if(player.hasMoo() && !player.hasStench() && !player.hasBreeze()){
-                sum = sum - 5;
+                if(supmuwBenefit[to[0]][to[1]] == 1){
+                    sum-=5;
+                }
             }
         }
 
