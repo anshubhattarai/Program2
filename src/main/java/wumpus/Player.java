@@ -301,6 +301,9 @@ public class Player extends Object {
                 Tile adjacent = world.getPosition(neighbor);
                 if (adjacent.contains(Element.SUPMUW)) {
                     supmuwPerceptions.add(Perception.MOO);
+                    if(isNeighborOfWumpus(adjacent)){
+                        supmuwPerceptions.add(Perception.STENCH);
+                    }
                 }
             }
         }
