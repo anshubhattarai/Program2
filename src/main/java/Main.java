@@ -3,13 +3,22 @@ import agents.RandomAgent;
 import wumpus.Agent;
 import wumpus.World;
 
+import java.io.*;
+
 /**
  * Entry point for the application.
  */
 public class Main {
+
     public static void main(String[] args) throws Exception {
+    	
         try {
-            // Create a 4x4 world
+            // Create a 4x4 world	
+        	
+        	 
+
+        	
+        	
             World world = new World(4, 4);
 //            world.setWumpus(0, 1);
 //            world.setPit(2, 2);

@@ -26,6 +26,7 @@ public class HeuristicAgent implements Agent {
     private double[][] dangers;
     private boolean[][] visited;
     private boolean[][] shoot;
+    private double[][] canshoot;
 
     private LinkedList<Action> nextActions = new LinkedList<Action>();
 
@@ -40,6 +41,7 @@ public class HeuristicAgent implements Agent {
         dangers = new double[w][h];
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
+        canshoot=new double[w][h];
     }
 
     /**
@@ -103,18 +105,58 @@ public class HeuristicAgent implements Agent {
         int[][] branches = getNeighbors(x, y);
 
         // Shoot an arrow to every non visited tiles if senses a stench
+        // Shoot an arrow to every non visited tiles if senses a stench
         if (player.hasStench() && player.hasArrows()) {
+        	boolean shootconfirm=false;
             // Apply killer instinct
+//            for(int[] branch : branches) {
+//                if (!visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
+//                    shoot[branch[0]][branch[1]] = true;
+//
+//                    ArrayList<Action> actions = getActionsToShoot(player, branch);
+//                    nextActions.addAll(actions);
+//                    return nextActions.poll();
+//                }
+//            }
+            boolean shootbranch = false;
+            // Verify if a pit was already found
             for(int[] branch : branches) {
-                if (!visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
-                    shoot[branch[0]][branch[1]] = true;
-
-                    ArrayList<Action> actions = getActionsToShoot(player, branch);
-                    nextActions.addAll(actions);
-                    return nextActions.poll();
+                if (canshoot[branch[0]][branch[1]] == 1 && shootconfirm==true) {
+                	shootbranch = true;
+                	shoot[branch[0]][branch[1]] = true;       
+                	 ArrayList<Action> actions = getActionsToShoot(player, branch);
+                	 nextActions.addAll(actions);
+                	 return nextActions.poll();
+                	 //break;
                 }
             }
-        }
+            // Estimate the pit location
+            //if (!shootconfirm && !visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
+                // Increase by 50% the probability of having some danger
+            if(!shootbranch){
+                for(int[] branch : branches) {
+                    if (!visited[branch[0]][branch[1]]) {
+                        if (canshoot[branch[0]][branch[1]] < 1) {
+                        	canshoot[branch[0]][branch[1]] += 0.5;
+                        }
+                        // Pit was found
+                        if (canshoot[branch[0]][branch[1]] == 1) {
+                        	shootconfirm = true;
+                       
+                        }
+                    }
+                }
+                // If a pit was found clear the dangers from other tiles
+                if (shootconfirm) {
+                    for (int[] branch : branches) {
+                        if (canshoot[branch[0]][branch[1]]  < 1) {
+                        	canshoot[branch[0]][branch[1]] = 0.0;
+                        }
+                    }
+                }
+            }
+    
+            }
 
         // Mark non visited neighbors has dangerous
         if (player.hasBreeze()) {
@@ -265,13 +307,22 @@ public class HeuristicAgent implements Agent {
      * @return The cost estimation tho reach the tile
      */
     private int getCost(Player player, int[] to) {
-        // Start with at least one forward
+    	 // Start with at least one forward
         int sum = 1;
         // If found gold choose the safest path otherwise costs more to return
         if (visited[to[0]][to[1]]) {
             if (player.hasGold()) sum -= 5;
             else sum += 5;
-        } else {
+        } 
+        else if (player.hasStench()){
+        	  if (canshoot[to[0]][to[1]] < 1) {
+                  sum += 10;
+              } else if (canshoot[to[0]][to[1]] == 1) {
+                  // Avoid tiles marked as 100% danger
+                  sum += 100;
+              }
+        }
+        else {
             // If senses a breeze avoid unvisited path
             if (player.hasBreeze()) {
                 if (dangers[to[0]][to[1]] < 1) {
@@ -281,6 +332,8 @@ public class HeuristicAgent implements Agent {
                     sum += 100;
                 }
             }
+            
+            if(player.getWorld().getNoTrespassIndices().contains(to[0]))
         }
 
         // The amount fo turns to take

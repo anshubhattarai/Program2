@@ -10,7 +10,7 @@ public class Environment {
      * The elements that can be found at the tiles.
      */
     public enum Element {
-        WUMPUS, PIT, HUNTER, GOLD, SUPMUW
+        WUMPUS, PIT, HUNTER, GOLD, SUPMUW, NOTRESSPASS
     }
 
     /**
@@ -91,6 +91,7 @@ public class Environment {
             case PIT: return "P";
             case GOLD: return "$";
             case SUPMUW:return "S";
+            case NOTRESSPASS:return "T";
         }
         return " ";
     }
@@ -104,8 +105,9 @@ public class Environment {
         switch (perception) {
             case GLITTER: return "*";
             case STENCH: return "~";
-            case BREEZE: return "≈";
+            case BREEZE: return "â‰ˆ";
             case MOO: return "@";
+            
         }
         return " ";
     }
@@ -116,13 +118,13 @@ public class Environment {
      * @return The icon
      */
     protected static String getIcon(Player player) {
-        if (player.isDead()) return "†";
+        if (player.isDead()) return "â€ ";
 
         switch (player.getDirection()) {
-            case N: return "↑";
-            case E: return "→";
-            case S: return "↓";
-            case W: return "←";
+            case N: return "^";
+            case E: return ">";
+            case S: return "v";
+            case W: return "<";
         }
 
         return "H";

@@ -27,7 +27,7 @@ public class Player extends Object {
     private boolean alive = true;
     private boolean gold = false;
     private boolean food = false;
-    private int arrows = 3;
+    private int arrows = 1;
 
     /**
      * Creates a new Player for the given world.
@@ -159,6 +159,9 @@ public class Player extends Object {
         }
     }
 
+    public World getWorld(){
+    	return world;
+    }
     /**
      * Interacts with the world executing an action.
      * @param action The action to take
@@ -168,20 +171,21 @@ public class Player extends Object {
         // Execute the action
         switch (action) {
             case GO_FORWARD:
+            	
                 int[] neighbors = tile.getNeighbors();
                 switch (direction) {
                     case N:
-                        if (neighbors[0] > -1) setTile(neighbors[0]);
+                        if ((neighbors[0] > -1)) setTile(neighbors[0]);
                         break;
                     case E:
-                        if (neighbors[1] > -1) setTile(neighbors[1]);
+                        if ((neighbors[1] > -1)) setTile(neighbors[1]);
                         break;
                     case S:
-                        if (neighbors[2] > -1) setTile(neighbors[2]);
+                        if ((neighbors[2] > -1)) setTile(neighbors[2]);
                         break;
                     case W:
 
-                        if (neighbors[3] > -1) setTile(neighbors[3]);
+                        if ((neighbors[3] > -1) || (world.noTrespassIndices.contains(neighbors[3]))) setTile(neighbors[3]);
                         break;
                 }
                 break;
@@ -271,7 +275,7 @@ public class Player extends Object {
         int[] neighbors = tile.getNeighbors();
         for (int i = 0; i < neighbors.length; i++) {
             // Sense bumps
-            if (neighbors[i] == -1) {
+            if ((neighbors[i] == -1) || (world.noTrespassIndices.contains(neighbors[i]))) {
                 if (    (i == 0 && direction == Direction.N) ||
                         (i == 1 && direction == Direction.E) ||
                         (i == 2 && direction == Direction.S) ||

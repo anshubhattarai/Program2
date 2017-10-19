@@ -1,6 +1,8 @@
 package wumpus;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import wumpus.Environment.Action;
@@ -18,6 +20,7 @@ public class World {
     private static final int DEFAULT_WUMPUS = 1;
     private static final int DEFAULT_SUPMUW = 1;
     private static final int DEFAULT_PITS = 2;
+    private static final int DEFAULT_NOTRESSPASS = 1;
 
     private final int width;
     private final int height;
@@ -27,7 +30,9 @@ public class World {
     private int pits = DEFAULT_PITS;
     private int wumpus = DEFAULT_WUMPUS;
     private int supmuw = DEFAULT_SUPMUW;
+    private int noTrespass = DEFAULT_NOTRESSPASS;
     private int maxSteps = DEFAULT_MAX_STEPS;
+    
 
     private boolean randomize = true;
     private HashMap<Integer, Environment.Element> items = new HashMap<Integer, Element>();
@@ -35,6 +40,7 @@ public class World {
     private String agentName;
     private final Player player;
     private final Tile[] tiles;
+    List<Integer> noTrespassIndices=new ArrayList<Integer>();
 
     /**
      * Creates a new world with given dimensions.
@@ -78,7 +84,7 @@ public class World {
     }
 
     /**
-     * Starts playing until game reachs its end.
+     * Starts playing until game reaches its end.
      * @return The plays iteration
      * @throws InterruptedException
      */
@@ -155,6 +161,23 @@ public class World {
     }
 
     /**
+     * Sets the number of no NoTrespass area.
+     * @param value
+     */
+    public void setNoTrespass(int value){
+        noTrespass = value;
+    }
+    /**
+     * Sets the position of no NoTrespass area at given coordinate.
+     * @param x	The horizontal position
+     * @param y The Vertical position
+     */
+    public void setNoTrespass(int x, int y) {
+        setItem(Element.NOTRESSPASS, x, y);
+    }
+
+    
+    /**
      * Sets the Gold at given coordinate.
      * @param x The horizontal position
      * @param y The vertical position
@@ -204,6 +227,9 @@ public class World {
                         z != safeBlocks[0] && z != safeBlocks[1]  && z != safeBlocks[2]  &&
                         z != safeBlocks[3]) {
                     position.setItem(element);
+                    if(position.contains(Element.NOTRESSPASS)){
+                    	noTrespassIndices.add(z);
+                    }
                     break;
                 }
                 // Do not loop forever
@@ -294,6 +320,7 @@ public class World {
             setRandom(Element.WUMPUS, wumpus);
             setRandom(Environment.Element.PIT, pits);
             setRandom(Element.SUPMUW, supmuw);
+            setRandom(Element.NOTRESSPASS, noTrespass);
             // Set the objective
             setRandom(Element.GOLD, gold);
         } else {
@@ -384,6 +411,9 @@ public class World {
                                 if (tile.contains(Element.SUPMUW)) {
                                     line = line.replace("2", Environment.getIcon(Element.SUPMUW));
                                 }
+                                if (tile.contains(Element.NOTRESSPASS)) {
+                                    line = line.replace("2", Environment.getIcon(Element.NOTRESSPASS));
+                                }
                                 if (tile.contains(Environment.Element.PIT)) {
                                     line = line.replace("2", Environment.getIcon(Element.PIT));
                                 }
@@ -447,6 +477,10 @@ public class World {
         }
     }
 
+    public List<Integer> getNoTrespassIndices(){
+    	return noTrespassIndices;
+    }
+    
     /**
      * Renders the score table as a ASCII string.
      * @return The score table
