@@ -67,7 +67,7 @@ public class Player extends Object {
      * Returns the current tile instance.
      * @return The Tile instance
      */
-    protected Tile getTile() {
+    public Tile getTile() {
         return tile;
     }
 
@@ -185,7 +185,7 @@ public class Player extends Object {
                         break;
                     case W:
 
-                        if ((neighbors[3] > -1) || (world.noTrespassIndices.contains(neighbors[3]))) setTile(neighbors[3]);
+                        if ((neighbors[3] > -1)) setTile(neighbors[3]);
                         break;
                 }
                 break;

@@ -199,6 +199,9 @@ public class World {
         } else {
             throw new InternalError("Tile is not empty!");
         }
+        if(element == Element.NOTRESSPASS){
+            noTrespassIndices.add(tile.getIndex());
+        }
         // Saves the items position for later retrieval
         items.put(tile.getIndex(), element);
         // Turn off randomization
