@@ -17,7 +17,7 @@ public class Environment {
      * The perceptions that can be sensed by the player.
      */
     public enum Perception {
-        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO
+        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO, OUT
     }
 
     /**

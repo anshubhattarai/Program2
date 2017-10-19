@@ -268,6 +268,10 @@ public class Player extends Object {
         if (tile.contains(Environment.Element.GOLD)) {
             perceptions.add(Perception.GLITTER);
         }
+        else if (tile.contains(Element.SUPMUW) && tile.contains(Element.PIT)){
+            perceptions.add(Perception.OUT);
+        }
+
         // Get the neighbors and find the senses
         int[] neighbors = tile.getNeighbors();
         for (int i = 0; i < neighbors.length; i++) {
