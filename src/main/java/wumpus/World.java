@@ -420,7 +420,7 @@ public class World {
     }
 
     private void renderSupmuw(Tile tile, String line) {
-        int[] neighbors = tile.getAllAdjacents();
+        int[] neighbors = tile.getNeighbors();
         for (int s = 0; s < neighbors.length; s++) {
             if (neighbors[s] == -1) continue;
             Tile neighbor = getPosition(neighbors[s]);

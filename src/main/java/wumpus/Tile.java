@@ -77,48 +77,6 @@ public class Tile {
 
 
     /**
-     *
-     * @return All the adjacents with clockwise orders {N,NE,E,SE,S,SW,W,NW}
-     */
-    public int[] getAllAdjacents() {
-        int[] neighbors = {-1, -1, -1, -1, -1, -1, -1, -1};
-        // Calculate the coordinates to each direction
-        int north = y - 1;
-        int south = y + 1;
-        int west = x - 1;
-        int east = x + 1;
-
-        // Limit the boundaries
-        if (north >= 0) neighbors[0] = getIndex(x, north);
-        if (south < h)  neighbors[4] = getIndex(x, south);
-        if (east < w)   neighbors[2] = getIndex(east, y);
-        if (west >= 0)  neighbors[6] = getIndex(west, y);
-
-        //northeast
-        if(north >= 0 && east < w){
-            neighbors[1] = getIndex(east, north);
-        }
-
-        //northwest
-        if(north >= 0 && west>=0){
-            neighbors[7] = getIndex(west, north);
-        }
-
-        //southeast
-        if(south <h && east < w){
-            neighbors[3] = getIndex(east, south);
-        }
-
-        //southwest
-        if(south < h && west>=0){
-            neighbors[5] = getIndex(west, south);
-        }
-
-        return neighbors;
-    }
-
-
-    /**
      * Resets all elements on this block.
      */
     public void clear() {

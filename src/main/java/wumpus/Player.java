@@ -295,7 +295,7 @@ public class Player extends Object {
 
     private List<Perception> addPerceptionsForSupmuw(){
         List<Perception> supmuwPerceptions = new ArrayList<Perception>();
-        int[] neighbors = tile.getAllAdjacents();
+        int[] neighbors = tile.getNeighbors();
         for (int neighbor : neighbors) {
             if (neighbor != -1) {
                 Tile adjacent = world.getPosition(neighbor);
