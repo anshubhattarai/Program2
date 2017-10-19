@@ -171,7 +171,7 @@ public class World {
      */
     private void setItem(Element element, int x, int y) {
         Tile tile = getPosition(x, y);
-        if (tile.isEmpty()) {
+        if (canElementBeInserted(tile, element)) {
             tile.setItem(element);
         } else {
             throw new InternalError("Tile is not empty!");
@@ -180,6 +180,21 @@ public class World {
         items.put(tile.getIndex(), element);
         // Turn off randomization
         randomize = false;
+    }
+
+    private boolean canElementBeInserted(Tile tile, Element element) {
+        if(startPosition == tile.getIndex()){
+            return false;
+        }
+        if (tile.isEmpty()){
+            return true;
+        }
+        if (element == Element.SUPMUW){
+            if(tile.contains(Element.PIT) || tile.contains(Element.WUMPUS)){
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
