@@ -28,6 +28,7 @@ public class HeuristicAgent implements Agent {
     private boolean[][] shoot;
 
     private double[][] supmuwDanger;
+    private double[][] supmuwBenefit;
 
     private LinkedList<Action> nextActions = new LinkedList<Action>();
 
@@ -41,6 +42,9 @@ public class HeuristicAgent implements Agent {
         h = height;
         pitDangers = new double[w][h];
         supmuwDanger = new double[w][h];
+
+        supmuwBenefit = new double[w][h];
+
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
     }
@@ -101,6 +105,10 @@ public class HeuristicAgent implements Agent {
 
         // Grab the gold if senses glitter
         if (player.hasGlitter()) return Action.GRAB;
+
+        if(player.getTile().contains(Environment.Element.SUPMUW) && !player.hasFood()){
+            return Action.EAT;
+        }
 
         // Calculate the neighbor branches
         int[][] branches = getNeighbors(x, y);
@@ -336,6 +344,11 @@ public class HeuristicAgent implements Agent {
                     // Avoid tiles marked as 100% danger
                     sum += 100;
                 }
+            }
+
+            //If it is visiting lone standing supmuw for the first time it will get some food
+            if(player.hasMoo() && !player.hasStench() && !player.hasBreeze()){
+                sum = sum - 5;
             }
         }
 

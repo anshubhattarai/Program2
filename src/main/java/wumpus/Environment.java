@@ -10,7 +10,7 @@ public class Environment {
      * The elements that can be found at the tiles.
      */
     public enum Element {
-        WUMPUS, PIT, HUNTER, GOLD, SUPMUW
+        WUMPUS, PIT, HUNTER, GOLD, SUPMUW, FOOD
     }
 
     /**
@@ -24,7 +24,7 @@ public class Environment {
      * The actions that the player can take.
      */
     public enum Action {
-        GO_FORWARD, TURN_LEFT, TURN_RIGHT, GRAB, SHOOT_ARROW, NOOP, EXIT, EAT_FOOD
+        GO_FORWARD, TURN_LEFT, TURN_RIGHT, GRAB, SHOOT_ARROW, NOOP, EXIT, EAT
     }
 
     /**
@@ -68,7 +68,7 @@ public class Environment {
                 case TURN_LEFT:
                 case TURN_RIGHT:
                 case GRAB:
-                case EAT_FOOD:
+                case EAT:
                     sum += -1;
                     break;
                 case SHOOT_ARROW:

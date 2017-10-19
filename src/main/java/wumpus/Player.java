@@ -67,7 +67,7 @@ public class Player extends Object {
      * Returns the current tile instance.
      * @return The Tile instance
      */
-    protected Tile getTile() {
+    public Tile getTile() {
         return tile;
     }
 
@@ -211,8 +211,9 @@ public class Player extends Object {
                 }
                 break;
 
-            case EAT_FOOD:
+            case EAT:
                 if(tile.contains(Element.SUPMUW) && !tile.contains(Element.PIT) && !tile.contains(Element.WUMPUS)){
+                    tile.remove(Element.FOOD);
                     food = true;
                 }
                 break;
