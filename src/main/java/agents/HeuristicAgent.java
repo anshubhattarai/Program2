@@ -9,6 +9,7 @@ import wumpus.Environment;
 import wumpus.Environment.Action;
 import wumpus.Player;
 import wumpus.Player.Direction;
+import wumpus.Tile;
 
 /**
  * An Agent that implements a basic heuristic strategy. The heuristic actions are as following:
@@ -24,6 +25,7 @@ public class HeuristicAgent implements Agent {
 
     private boolean debug = true;
     private double[][] dangers;
+    private boolean[][] noTrespass;
     private boolean[][] visited;
     private boolean[][] shoot;
     private double[][] canshoot;
@@ -39,6 +41,7 @@ public class HeuristicAgent implements Agent {
         w = width;
         h = height;
         dangers = new double[w][h];
+        noTrespass = new boolean[w][h];
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
         canshoot=new double[w][h];
@@ -92,17 +95,36 @@ public class HeuristicAgent implements Agent {
 
         // Set this block as visited
         visited[x][y] = true;
-
-        // Apply actions pools
+        // Apply actions pools if no bump is encountered
         if (nextActions.size() > 0) {
-            return nextActions.poll();
-        }
+            if(nextActions.size() == 1 && player.hasBump()){
+                nextActions.clear();
+            }else{
+                return nextActions.poll();
+            }
 
+        }
         // Grab the gold if senses glitter
         if (player.hasGlitter()) return Action.GRAB;
 
         // Calculate the neighbor branches
         int[][] branches = getNeighbors(x, y);
+
+
+        if(player.hasBump()){
+            if(player.getDirection() == Direction.N && player.getY() != 0){
+                noTrespass[x][y-1]=true;
+            }
+            else if(player.getDirection() == Direction.E && player.getX() != w-1){
+                noTrespass[x+1][y]=true;
+            }
+            else if(player.getDirection() == Direction.W && player.getX() != 0){
+                noTrespass[x-1][y]=true;
+            }
+            else if(player.getDirection() == Direction.S && player.getY() != h-1){
+                noTrespass[x][y+1]=true;
+            }
+        }
 
         // Shoot an arrow to every non visited tiles if senses a stench
         // Shoot an arrow to every non visited tiles if senses a stench
@@ -313,16 +335,16 @@ public class HeuristicAgent implements Agent {
         if (visited[to[0]][to[1]]) {
             if (player.hasGold()) sum -= 5;
             else sum += 5;
-        } 
-        else if (player.hasStench()){
+        } else if(noTrespass[to[0]][to[1]]){
+            sum+=300;
+        } else if (player.hasStench()){
         	  if (canshoot[to[0]][to[1]] < 1) {
                   sum += 10;
               } else if (canshoot[to[0]][to[1]] == 1) {
                   // Avoid tiles marked as 100% danger
                   sum += 100;
               }
-        }
-        else {
+        } else {
             // If senses a breeze avoid unvisited path
             if (player.hasBreeze()) {
                 if (dangers[to[0]][to[1]] < 1) {
@@ -332,11 +354,7 @@ public class HeuristicAgent implements Agent {
                     sum += 100;
                 }
             }
-            
-            
         }
-
-        // The amount fo turns to take
         int turns = getTurns(player, to);
         sum += Math.abs(turns);
 
@@ -359,7 +377,6 @@ public class HeuristicAgent implements Agent {
         }
         // Go to the block
         actions.add(Action.GO_FORWARD);
-
         return actions;
     }
     

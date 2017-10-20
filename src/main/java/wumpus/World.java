@@ -208,6 +208,9 @@ public class World {
         	 }           
         	//System.out.println("Tile is not empty. Please confirm that Pit, Gold and Wumpus are note in the same position");
         }
+        if(element == Element.NOTRESSPASS){
+            noTrespassIndices.add(tile.getIndex());
+        }
         // Saves the items position for later retrieval
         items.put(tile.getIndex(), element);
         // Turn off randomization

@@ -67,7 +67,7 @@ public class Player extends Object {
      * Returns the current tile instance.
      * @return The Tile instance
      */
-    protected Tile getTile() {
+    public Tile getTile() {
         return tile;
     }
 
