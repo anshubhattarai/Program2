@@ -44,12 +44,9 @@ public class HeuristicAgent implements Agent {
         h = height;
         pitDangers = new double[w][h];
         supmuwDanger = new double[w][h];
-
         supmuwBenefit = new double[w][h];
-
         noTrespass = new boolean[w][h];
         canshoot = new double[w][h];
-
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
     }
