@@ -159,15 +159,19 @@ public class HeuristicAgent implements Agent {
 //            }
             boolean shootbranch = false;
             // Verify if a pit was already found
+            int[] branchToShoot = {-1,-1};
             for (int[] branch : branches) {
                 if (canshoot[branch[0]][branch[1]] == 1 && shootconfirm == true) {
                     shootbranch = true;
                     shoot[branch[0]][branch[1]] = true;
-                    ArrayList<Action> actions = getActionsToShoot(player, branch);
-                    nextActions.addAll(actions);
-                    return nextActions.poll();
+                    branchToShoot = branch;
                     //break;
                 }
+            }
+            if(shootbranch){
+                ArrayList<Action> actions = getActionsToShoot(player, branchToShoot);
+                nextActions.addAll(actions);
+                return nextActions.poll();
             }
             // Estimate the pit location
             //if (!shootconfirm && !visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
@@ -214,9 +218,11 @@ public class HeuristicAgent implements Agent {
         int[] next = {-1, -1};
         for (int[] branch : branches) {
             int cost = getCost(player, branch);
+            System.out.println("COST OF BRANCH " + branch[0] + branch[1] +  " = " + cost);
             if (cost < currentCost) {
                 currentCost = cost;
                 next = branch;
+                System.out.println("ACTUAL COST " + cost);
             }
         }
         // Print the chosen tile
@@ -434,6 +440,7 @@ public class HeuristicAgent implements Agent {
         int sum = 1;
         // If found gold choose the safest path otherwise costs more to return
         if (visited[to[0]][to[1]]) {
+            System.out.println("VISITED TRUE");
             if (player.hasGold()) sum -= 5;
             else sum += 5;
         } else if (noTrespass[to[0]][to[1]]) {
@@ -491,6 +498,7 @@ public class HeuristicAgent implements Agent {
 
         // The amount fo turns to take
         int turns = getTurns(player, to);
+        System.out.println("BEFORE ADDING SUM FROM TURNS SUM + "+ sum);
         sum += Math.abs(turns);
 
         return sum;

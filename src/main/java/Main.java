@@ -1,5 +1,6 @@
 import agents.HeuristicAgent;
 import agents.RandomAgent;
+import exception.ElementUnplacableException;
 import wumpus.Agent;
 import wumpus.World;
 
@@ -11,7 +12,7 @@ import java.util.Scanner;
  */
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args){
     	
         try {
         	World world = new World(10, 10);
@@ -138,9 +139,10 @@ public class Main {
 
             System.out.format("Results for %s:%n", world.getAgentName());
             System.out.println(world.renderScore());
-        } catch (Exception error) {
-            error.printStackTrace();
-           
-        }
+        } catch (ElementUnplacableException exception){
+			System.out.println(exception.getMessage());
+		} catch (Exception error) {
+			error.printStackTrace();
+		}
     }
 }

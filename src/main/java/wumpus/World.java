@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import exception.ElementUnplacableException;
 import wumpus.Environment.Action;
 import wumpus.Environment.Element;
 import wumpus.Environment.Perception;
@@ -131,7 +132,7 @@ public class World {
      * @param x The horizontal coordinate
      * @param y The vertical coordinate
      */
-    public void setPit(int x, int y) {
+    public void setPit(int x, int y) throws ElementUnplacableException {
         setItem(Element.PIT, x, y);
     }
 
@@ -148,7 +149,7 @@ public class World {
      * @param x The horizontal position
      * @param y The vertical position
      */
-    public void setWumpus(int x, int y) {
+    public void setWumpus(int x, int y) throws ElementUnplacableException {
         setItem(Element.WUMPUS, x, y);
     }
 
@@ -157,7 +158,7 @@ public class World {
         supmuw = value;
     }
 
-    public void setSupmuw(int x, int y) {
+    public void setSupmuw(int x, int y) throws ElementUnplacableException {
         setItem(Element.SUPMUW, x, y);
     }
 
@@ -173,7 +174,7 @@ public class World {
      * @param x	The horizontal position
      * @param y The Vertical position
      */
-    public void setNoTrespass(int x, int y) {
+    public void setNoTrespass(int x, int y) throws ElementUnplacableException {
         setItem(Element.NOTRESSPASS, x, y);
     }
 
@@ -183,7 +184,7 @@ public class World {
      * @param x The horizontal position
      * @param y The vertical position
      */
-    public void setGold(int x, int y) {
+    public void setGold(int x, int y) throws ElementUnplacableException {
         setItem(Element.GOLD, x, y);
     }
 
@@ -193,7 +194,7 @@ public class World {
      * @param x The horizontal position
      * @param y The vertical position
      */
-    private void setItem(Element element, int x, int y) {
+    private void setItem(Element element, int x, int y) throws ElementUnplacableException {
         Tile tile = getPosition(x, y);
         Set<Element> elements = new HashSet<Element>();
         elements.addAll(tile.getElements());
@@ -201,7 +202,7 @@ public class World {
             tile.setItem(element);
             elements.add(element);
         } else {
-            throw new InternalError("Tile is not empty! You have either set Wumpus and Pit in the same Tile");
+            throw new ElementUnplacableException("Tile is not empty! You cannot have multiple elements in the same tile.");
         }
         if (element == Element.NOTRESSPASS) {
             noTrespassIndices.add(tile.getIndex());
@@ -211,9 +212,9 @@ public class World {
 
     
 
-    private boolean canElementBeInserted(Tile tile, Element element) {
+    private boolean canElementBeInserted(Tile tile, Element element) throws ElementUnplacableException {
         if(startPosition == tile.getIndex()){
-            return false;
+            throw new ElementUnplacableException("Nothing can be placed in the starting position");
         }
         if (tile.isEmpty()){
             return true;
@@ -420,13 +421,25 @@ public class World {
                     switch (z) {
                         case 0:
                             if (x == 0) render.append("+");
-                            render.append("-----+");
+                            render.append("-------+");
                             break;
                         default:
                             Tile tile = getPosition(x, y);
-                            String line = " 1 2 |";
+                            String line = " 1 2 3 |";
                             if (z == 1) {
                                 // Renders the second line
+                                if (tile.contains(Environment.Element.SUPMUW) && tile.contains(Environment.Element.WUMPUS)) {
+                                    //line = line.replace("2", Environment.getIcon(Element.SUPMUW).replace("3", Environment.getIcon(Element.WUMPUS)));
+                                    line = line.replace("2", Environment.getIcon(Element.WUMPUS));
+                                    line = line.replace("3", Environment.getIcon(Element.SUPMUW));
+                                }
+
+                                if (tile.contains(Environment.Element.SUPMUW) && tile.contains(Environment.Element.PIT)) {
+                                    //line = line.replace("2", Environment.getIcon(Element.SUPMUW).replace("3", Environment.getIcon(Element.WUMPUS)));
+                                    line = line.replace("2", Environment.getIcon(Element.PIT));
+                                    line = line.replace("3", Environment.getIcon(Element.SUPMUW));
+                                }
+
                                 if (tile.contains(Environment.Element.WUMPUS)) {
                                     line = line.replace("2", Environment.getIcon(Environment.Element.WUMPUS));
                                 }
@@ -455,7 +468,7 @@ public class World {
                                 renderSupmuw(tile, line);
                             }
                             // Erase any non-replaced items
-                            line = line.replace("1", " ").replace("2", " ");
+                            line = line.replace("1", " ").replace("2", " ").replace("3", " ");
                             // Draw
                             if (x == 0) render.append("|");
                             render.append(line);
@@ -466,7 +479,7 @@ public class World {
         }
         for (int i = 0; i < width; i++) {
             if (i == 0) render.append("+");
-            render.append("-----+");
+            render.append("-------+");
         }
         return render.toString();
     }
