@@ -1,0 +1,20 @@
+1. Make sure that the input.txt file has correct inputs.
+	We cannot have multiple Environment elements except : Sumpuw+Wumpus and Sumpuw+Pit in tha same tile.
+	Environment elements are: Wumpus, Pit, No Trespass Area, Gold, Sumpuw
+
+2.  There can be multiple "Pits" and multiple "No Trespass Area" but only one "Gold", "Wumpus" and "Summpuw"
+ 
+3.  Input file is in the format:
+	PositionofPits 1 3
+	PositionofPits 6 1
+	PositionOfNoTrespassArea 2 3
+	PositionOfWumpus 2 8
+	PositionOfSumpuw 2 8
+	PositiongOfGold 8 8	
+	
+	In "PositionofPits 1 3" 1 represents column number and 3 represents row number.
+	If you want to add multiple pits, add aother line (e.g. "PositionofPits 1 4") like above. 
+	Same logic for all.
+
+4. Agent shoots arrow only after it confirms that there is a wumpus in a tile.
+	

@@ -1,6 +1,5 @@
 package wumpus;
 
-import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,7 +14,7 @@ import wumpus.Environment.Perception;
  * render of it.
  */
 public class World {
-    private static final int DEFAULT_MAX_STEPS = 300;
+    private static final int DEFAULT_MAX_STEPS = 200;
     private static final int RANDOM_MAX_TRIES = 20;
     private static final int DEFAULT_GOLD = 1;
     private static final int DEFAULT_WUMPUS = 1;
@@ -36,7 +35,7 @@ public class World {
     
 
     private boolean randomize = true;
-    private HashMap<Integer, Set<Element>> items = new HashMap<Integer, Set<Element>>();
+    private HashMap<Integer, Environment.Element> items = new HashMap<Integer, Element>();
 
     private String agentName;
     private final Player player;
@@ -195,34 +194,15 @@ public class World {
      */
     private void setItem(Element element, int x, int y) {
         Tile tile = getPosition(x, y);
-        Set<Element> elements = new HashSet<Element>();
-        elements.addAll(tile.getElements());
-        if (canElementBeInserted(tile, element)) {
+        if (tile.isEmpty()) {
             tile.setItem(element);
-            elements.add(element);
         } else {
-            throw new InternalError("Tile is not empty! You have either set Wumpus and Pit in the same Tile");
+            throw new InternalError("Tile is not empty!");
         }
-        if (element == Element.NOTRESSPASS) {
-            noTrespassIndices.add(tile.getIndex());
-        }
-        items.put(tile.getIndex(), elements);
-    }
-
-    
-
-    private boolean canElementBeInserted(Tile tile, Element element) {
-        if(startPosition == tile.getIndex()){
-            return false;
-        }
-        if (tile.isEmpty()){
-            return true;
-        }
-        if ((((tile.contains(Element.WUMPUS)) && element==Element.SUPMUW)) || (tile.contains(Element.SUPMUW) && element==Element.WUMPUS)
-                || (tile.contains(Element.PIT) && element==Element.SUPMUW) || (tile.contains(Element.SUPMUW) && element==Element.PIT)){
-            return true;
-        }
-        return false;
+        // Saves the items position for later retrieval
+        items.put(tile.getIndex(), element);
+        // Turn off randomization
+        randomize = false;
     }
 
     /**
@@ -346,9 +326,7 @@ public class World {
         } else {
             for (int index : items.keySet()) {
                 Tile tile = getPosition(index);
-                for (Element element: items.get(index)) {
-                    tile.setItem(element);
-                }
+                tile.setItem(items.get(index));
             }
         }
     }
@@ -472,7 +450,7 @@ public class World {
     }
 
     private void renderSupmuw(Tile tile, String line) {
-        int[] neighbors = tile.getNeighbors();
+        int[] neighbors = tile.getAllAdjacents();
         for (int s = 0; s < neighbors.length; s++) {
             if (neighbors[s] == -1) continue;
             Tile neighbor = getPosition(neighbors[s]);
@@ -499,10 +477,6 @@ public class World {
         }
     }
 
-    public List<Integer> getNoTrespassIndices(){
-    	return noTrespassIndices;
-    }
-    
     /**
      * Renders the score table as a ASCII string.
      * @return The score table

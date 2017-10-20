@@ -10,21 +10,21 @@ public class Environment {
      * The elements that can be found at the tiles.
      */
     public enum Element {
-        WUMPUS, PIT, HUNTER, GOLD, SUPMUW, FOOD, NOTRESSPASS
+        WUMPUS, PIT, HUNTER, GOLD, SUPMUW, NOTRESSPASS
     }
 
     /**
      * The perceptions that can be sensed by the player.
      */
     public enum Perception {
-        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO, OUT
+        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO
     }
 
     /**
      * The actions that the player can take.
      */
     public enum Action {
-        GO_FORWARD, TURN_LEFT, TURN_RIGHT, GRAB, SHOOT_ARROW, NOOP, EXIT, EAT
+        GO_FORWARD, TURN_LEFT, TURN_RIGHT, GRAB, SHOOT_ARROW, NOOP, EXIT, EAT_FOOD
     }
 
     /**
@@ -68,7 +68,7 @@ public class Environment {
                 case TURN_LEFT:
                 case TURN_RIGHT:
                 case GRAB:
-                case EAT:
+                case EAT_FOOD:
                     sum += -1;
                     break;
                 case SHOOT_ARROW:
@@ -121,10 +121,10 @@ public class Environment {
         if (player.isDead()) return "â€ ";
 
         switch (player.getDirection()) {
-            case N: return "^";
-            case E: return ">";
-            case S: return "v";
-            case W: return "<";
+            case N: return "â†‘";
+            case E: return "â†’";
+            case S: return "â†“";
+            case W: return "â†�";
         }
 
         return "H";

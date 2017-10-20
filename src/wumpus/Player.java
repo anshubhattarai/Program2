@@ -67,7 +67,7 @@ public class Player extends Object {
      * Returns the current tile instance.
      * @return The Tile instance
      */
-    public Tile getTile() {
+    protected Tile getTile() {
         return tile;
     }
 
@@ -159,9 +159,6 @@ public class Player extends Object {
         }
     }
 
-    public World getWorld(){
-    	return world;
-    }
     /**
      * Interacts with the world executing an action.
      * @param action The action to take
@@ -171,21 +168,20 @@ public class Player extends Object {
         // Execute the action
         switch (action) {
             case GO_FORWARD:
-            	
                 int[] neighbors = tile.getNeighbors();
                 switch (direction) {
                     case N:
-                        if ((neighbors[0] > -1)) setTile(neighbors[0]);
+                        if (neighbors[0] > -1) setTile(neighbors[0]);
                         break;
                     case E:
-                        if ((neighbors[1] > -1)) setTile(neighbors[1]);
+                        if (neighbors[1] > -1) setTile(neighbors[1]);
                         break;
                     case S:
-                        if ((neighbors[2] > -1)) setTile(neighbors[2]);
+                        if (neighbors[2] > -1) setTile(neighbors[2]);
                         break;
                     case W:
 
-                        if ((neighbors[3] > -1)) setTile(neighbors[3]);
+                        if (neighbors[3] > -1) setTile(neighbors[3]);
                         break;
                 }
                 break;
@@ -215,9 +211,8 @@ public class Player extends Object {
                 }
                 break;
 
-            case EAT:
+            case EAT_FOOD:
                 if(tile.contains(Element.SUPMUW) && !tile.contains(Element.PIT) && !tile.contains(Element.WUMPUS)){
-                    tile.remove(Element.FOOD);
                     food = true;
                 }
                 break;
@@ -272,10 +267,6 @@ public class Player extends Object {
         if (tile.contains(Environment.Element.GOLD)) {
             perceptions.add(Perception.GLITTER);
         }
-        else if (tile.contains(Element.SUPMUW) && tile.contains(Element.PIT)){
-            perceptions.add(Perception.OUT);
-        }
-
         // Get the neighbors and find the senses
         int[] neighbors = tile.getNeighbors();
         for (int i = 0; i < neighbors.length; i++) {
@@ -304,15 +295,12 @@ public class Player extends Object {
 
     private List<Perception> addPerceptionsForSupmuw(){
         List<Perception> supmuwPerceptions = new ArrayList<Perception>();
-        int[] neighbors = tile.getNeighbors();
+        int[] neighbors = tile.getAllAdjacents();
         for (int neighbor : neighbors) {
             if (neighbor != -1) {
                 Tile adjacent = world.getPosition(neighbor);
                 if (adjacent.contains(Element.SUPMUW)) {
                     supmuwPerceptions.add(Perception.MOO);
-                    if(isNeighborOfWumpus(adjacent)){
-                        supmuwPerceptions.add(Perception.STENCH);
-                    }
                 }
             }
         }
