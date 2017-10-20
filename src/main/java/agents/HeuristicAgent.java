@@ -333,7 +333,7 @@ public class HeuristicAgent implements Agent {
                 }
             }
             
-            if(player.getWorld().getNoTrespassIndices().contains(to[0]))
+            
         }
 
         // The amount fo turns to take

@@ -14,7 +14,7 @@ import wumpus.Environment.Perception;
  * render of it.
  */
 public class World {
-    private static final int DEFAULT_MAX_STEPS = 200;
+    private static final int DEFAULT_MAX_STEPS = 300;
     private static final int RANDOM_MAX_TRIES = 20;
     private static final int DEFAULT_GOLD = 1;
     private static final int DEFAULT_WUMPUS = 1;
@@ -34,7 +34,7 @@ public class World {
     private int maxSteps = DEFAULT_MAX_STEPS;
     
 
-    private boolean randomize = true;
+    private boolean randomize = false;
     private HashMap<Integer, Environment.Element> items = new HashMap<Integer, Element>();
 
     private String agentName;
@@ -194,16 +194,33 @@ public class World {
      */
     private void setItem(Element element, int x, int y) {
         Tile tile = getPosition(x, y);
+       
+        	
         if (tile.isEmpty()) {
             tile.setItem(element);
         } else {
-            throw new InternalError("Tile is not empty!");
+        	 if((((tile.contains(Element.WUMPUS)) && element==Element.SUPMUW)) || (tile.contains(Element.SUPMUW) && element==Element.WUMPUS)
+        			 || (tile.contains(Element.PIT) && element==Element.SUPMUW) || (tile.contains(Element.SUPMUW) && element==Element.PIT)){
+        		 tile.setItem(element);
+             }
+        	 else{
+        		 throw new InternalError("Tile is not empty! You have either set Wumpus and Pit in the same Tile");
+        	 }           
+        	//System.out.println("Tile is not empty. Please confirm that Pit, Gold and Wumpus are note in the same position");
         }
         // Saves the items position for later retrieval
         items.put(tile.getIndex(), element);
         // Turn off randomization
         randomize = false;
-    }
+        
+        if (tile.contains(Element.WUMPUS)){
+        	System.out.println("has wumpus");	
+			}
+        if (tile.contains(Element.SUPMUW)){
+        	System.out.println("has sump");	
+			}
+        }
+    
 
     /**
      * Sets a random position for the a set of items respecting safe blocks.

@@ -1,0 +1,6 @@
+PositionofPits 1 3
+PositionofPits 6 1
+PositionOfNoTrespassArea 2 3
+PositionOfWumpus 2 8
+PositionOfSumpuw 2 8
+PositiongOfGold 8 8
