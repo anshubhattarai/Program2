@@ -1,14 +1,14 @@
 package agents;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-
 import wumpus.Agent;
 import wumpus.Environment;
 import wumpus.Environment.Action;
 import wumpus.Player;
 import wumpus.Player.Direction;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 /**
  * An Agent that implements a basic heuristic strategy. The heuristic actions are as following:
@@ -24,9 +24,10 @@ public class HeuristicAgent implements Agent {
 
     private boolean debug = true;
     private double[][] pitDangers;
+    private boolean[][] noTrespass;
     private boolean[][] visited;
     private boolean[][] shoot;
-
+    private double[][] canshoot;
     private double[][] supmuwDanger;
     private double[][] supmuwBenefit;
 
@@ -34,8 +35,9 @@ public class HeuristicAgent implements Agent {
 
     /**
      * The strategy constructor.
-     * @param width The board width
-     * @param height  The board height
+     *
+     * @param width  The board width
+     * @param height The board height
      */
     public HeuristicAgent(int width, int height) {
         w = width;
@@ -45,12 +47,16 @@ public class HeuristicAgent implements Agent {
 
         supmuwBenefit = new double[w][h];
 
+        noTrespass = new boolean[w][h];
+        canshoot = new double[w][h];
+
         visited = new boolean[w][h];
         shoot = new boolean[w][h];
     }
 
     /**
      * Sets weather to show the debug messages or not.
+     *
      * @param value <tt>true</tt> to display messages
      */
     public void setDebug(boolean value) {
@@ -59,6 +65,7 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Prints the player board and debug message.
+     *
      * @param player The player instance
      */
     public void beforeAction(Player player) {
@@ -70,6 +77,7 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Prints the last action taken.
+     *
      * @param player The player instance
      */
     public void afterAction(Player player) {
@@ -87,6 +95,7 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Implements the player artificial intelligence strategy.
+     *
      * @param player The player instance
      * @return The next action
      */
@@ -97,44 +106,98 @@ public class HeuristicAgent implements Agent {
 
         // Set this block as visited
         visited[x][y] = true;
-
-        // Apply actions pools
+        // Apply actions pools if no bump is encountered
         if (nextActions.size() > 0) {
-            return nextActions.poll();
+            if (nextActions.size() == 1 && player.hasBump()) {
+                nextActions.clear();
+            } else {
+                return nextActions.poll();
+            }
         }
 
         // Grab the gold if senses glitter
         if (player.hasGlitter()) return Action.GRAB;
 
-        if(player.getTile().contains(Environment.Element.SUPMUW) && !player.hasFood()){
+        if (player.getTile().contains(Environment.Element.SUPMUW) && !player.hasFood()) {
             return Action.EAT;
         }
 
         // Calculate the neighbor branches
         int[][] branches = getNeighbors(x, y);
 
+        if (player.hasBump()) {
+            if (player.getDirection() == Direction.N && player.getY() != 0) {
+                noTrespass[x][y - 1] = true;
+            } else if (player.getDirection() == Direction.E && player.getX() != w - 1) {
+                noTrespass[x + 1][y] = true;
+            } else if (player.getDirection() == Direction.W && player.getX() != 0) {
+                noTrespass[x - 1][y] = true;
+            } else if (player.getDirection() == Direction.S && player.getY() != h - 1) {
+                noTrespass[x][y + 1] = true;
+            }
+        }
 
         //Case when supmuw behaves like wumpus. Need to estimate these locations and avoid them
-        if (player.hasStench() && player.hasMoo()){
+        if (player.hasStench() && player.hasMoo()) {
             estimateDangerLocationForSupmuw(branches);
         }
 
-        if(player.hasMoo() && !player.hasStench()){
+        if (player.hasMoo() && !player.hasStench()) {
             estimateSupmuwLocation(branches);
         }
 
         // Shoot an arrow to every non visited tiles if senses a stench
-        if (player.hasStench() && player.hasArrows() && !player.hasMoo()) {
+        // Shoot an arrow to every non visited tiles if senses a stench
+        if (player.hasStench() && player.hasArrows()) {
+            boolean shootconfirm = false;
             // Apply killer instinct
-            for(int[] branch : branches) {
-                if (!visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
+//            for(int[] branch : branches) {
+//                if (!visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
+//                    shoot[branch[0]][branch[1]] = true;
+//
+//                    ArrayList<Action> actions = getActionsToShoot(player, branch);
+//                    nextActions.addAll(actions);
+//                    return nextActions.poll();
+//                }
+//            }
+            boolean shootbranch = false;
+            // Verify if a pit was already found
+            for (int[] branch : branches) {
+                if (canshoot[branch[0]][branch[1]] == 1 && shootconfirm == true) {
+                    shootbranch = true;
                     shoot[branch[0]][branch[1]] = true;
-
                     ArrayList<Action> actions = getActionsToShoot(player, branch);
                     nextActions.addAll(actions);
                     return nextActions.poll();
+                    //break;
                 }
             }
+            // Estimate the pit location
+            //if (!shootconfirm && !visited[branch[0]][branch[1]] && !shoot[branch[0]][branch[1]]) {
+            // Increase by 50% the probability of having some danger
+            if (!shootbranch) {
+                for (int[] branch : branches) {
+                    if (!visited[branch[0]][branch[1]]) {
+                        if (canshoot[branch[0]][branch[1]] < 1) {
+                            canshoot[branch[0]][branch[1]] += 0.5;
+                        }
+                        // Pit was found
+                        if (canshoot[branch[0]][branch[1]] == 1) {
+                            shootconfirm = true;
+
+                        }
+                    }
+                }
+                // If a pit was found clear the dangers from other tiles
+                if (shootconfirm) {
+                    for (int[] branch : branches) {
+                        if (canshoot[branch[0]][branch[1]] < 1) {
+                            canshoot[branch[0]][branch[1]] = 0.0;
+                        }
+                    }
+                }
+            }
+
         }
 
         // Mark non visited neighbors has dangerous
@@ -154,7 +217,7 @@ public class HeuristicAgent implements Agent {
         int[] next = {-1, -1};
         for (int[] branch : branches) {
             int cost = getCost(player, branch);
-            if(cost < currentCost) {
+            if (cost < currentCost) {
                 currentCost = cost;
                 next = branch;
             }
@@ -175,7 +238,7 @@ public class HeuristicAgent implements Agent {
     private void estimateDangerLocationForSupmuw(int[][] branches) {
         boolean knowSupmuwLocation = false;
         // Verify if a supmuw was already found
-        for(int[] branch : branches) {
+        for (int[] branch : branches) {
             if (supmuwDanger[branch[0]][branch[1]] == 1) {
                 knowSupmuwLocation = true;
                 break;
@@ -184,7 +247,7 @@ public class HeuristicAgent implements Agent {
         // Estimate the supmuw location
         if (!knowSupmuwLocation) {
             // Increase by 50% the probability of having some danger
-            for(int[] branch : branches) {
+            for (int[] branch : branches) {
                 if (!visited[branch[0]][branch[1]]) {
                     if (supmuwDanger[branch[0]][branch[1]] < 1) {
                         supmuwDanger[branch[0]][branch[1]] += 0.5;
@@ -198,7 +261,7 @@ public class HeuristicAgent implements Agent {
             // If a pit was found clear supmuw danger from other tiles
             if (knowSupmuwLocation) {
                 for (int[] branch : branches) {
-                    if (supmuwDanger[branch[0]][branch[1]]  < 1) {
+                    if (supmuwDanger[branch[0]][branch[1]] < 1) {
                         supmuwDanger[branch[0]][branch[1]] = 0.0;
                     }
                 }
@@ -209,7 +272,7 @@ public class HeuristicAgent implements Agent {
     private void estimatePitLocation(int[][] branches) {
         boolean knowPitPosition = false;
         // Verify if a pit was already found
-        for(int[] branch : branches) {
+        for (int[] branch : branches) {
             if (pitDangers[branch[0]][branch[1]] == 1) {
                 knowPitPosition = true;
                 break;
@@ -218,7 +281,7 @@ public class HeuristicAgent implements Agent {
         // Estimate the pit location
         if (!knowPitPosition) {
             // Increase by 50% the probability of having some danger
-            for(int[] branch : branches) {
+            for (int[] branch : branches) {
                 if (!visited[branch[0]][branch[1]]) {
                     if (pitDangers[branch[0]][branch[1]] < 1) {
                         pitDangers[branch[0]][branch[1]] += 0.5;
@@ -232,7 +295,7 @@ public class HeuristicAgent implements Agent {
             // If a pit was found clear the pitDangers from other tiles
             if (knowPitPosition) {
                 for (int[] branch : branches) {
-                    if (pitDangers[branch[0]][branch[1]]  < 1) {
+                    if (pitDangers[branch[0]][branch[1]] < 1) {
                         pitDangers[branch[0]][branch[1]] = 0.0;
                     }
                 }
@@ -244,7 +307,7 @@ public class HeuristicAgent implements Agent {
     private void estimateSupmuwLocation(int[][] branches) {
         boolean knowSupmuwLocation = false;
         // Verify if a pit was already found
-        for(int[] branch : branches) {
+        for (int[] branch : branches) {
             if (supmuwBenefit[branch[0]][branch[1]] == 1) {
                 knowSupmuwLocation = true;
                 break;
@@ -253,7 +316,7 @@ public class HeuristicAgent implements Agent {
         // Estimate the supmuw location
         if (!knowSupmuwLocation) {
             // Increase by 50% the probability of having supmuw
-            for(int[] branch : branches) {
+            for (int[] branch : branches) {
                 if (!visited[branch[0]][branch[1]]) {
                     if (supmuwBenefit[branch[0]][branch[1]] < 1) {
                         supmuwBenefit[branch[0]][branch[1]] += 0.5;
@@ -267,7 +330,7 @@ public class HeuristicAgent implements Agent {
             // If supmuw was found clear the chances from other tiles
             if (knowSupmuwLocation) {
                 for (int[] branch : branches) {
-                    if (supmuwBenefit[branch[0]][branch[1]]  < 1) {
+                    if (supmuwBenefit[branch[0]][branch[1]] < 1) {
                         supmuwBenefit[branch[0]][branch[1]] = 0.0;
                     }
                 }
@@ -277,6 +340,7 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Gets the adjacent tiles of the given coordinates.
+     *
      * @param x The tile X coordinate
      * @param y The tile Y coordinate
      * @return An array of 2D coordinates
@@ -292,19 +356,27 @@ public class HeuristicAgent implements Agent {
 
         // Check if branch is into bounds
         if (north >= 0) nodesMap.put(Direction.N, north);
-        if (south < h)  nodesMap.put(Direction.S, south);
-        if (east < w)   nodesMap.put(Direction.E, east);
-        if (west >= 0)  nodesMap.put(Direction.W, west);
+        if (south < h) nodesMap.put(Direction.S, south);
+        if (east < w) nodesMap.put(Direction.E, east);
+        if (west >= 0) nodesMap.put(Direction.W, west);
 
         // Build the branches array
         int branch = 0;
         int[][] nodes = new int[nodesMap.size()][2];
         for (Direction direction : nodesMap.keySet()) {
             switch (direction) {
-                case N: nodes[branch] = new int[]{x, north}; break;
-                case S: nodes[branch] = new int[]{x, south}; break;
-                case E: nodes[branch] = new int[]{east, y}; break;
-                case W: nodes[branch] = new int[]{west, y}; break;
+                case N:
+                    nodes[branch] = new int[]{x, north};
+                    break;
+                case S:
+                    nodes[branch] = new int[]{x, south};
+                    break;
+                case E:
+                    nodes[branch] = new int[]{east, y};
+                    break;
+                case W:
+                    nodes[branch] = new int[]{west, y};
+                    break;
             }
             branch++;
         }
@@ -314,8 +386,9 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Returns the amount of turns player need to take to get into given position.
+     *
      * @param player The player's instance
-     * @param to The destination tile
+     * @param to     The destination tile
      * @return The number of turns
      */
     private int getTurns(Player player, int[] to) {
@@ -342,20 +415,21 @@ public class HeuristicAgent implements Agent {
         double lenProduct = Math.hypot(from[0], from[1]) * Math.hypot(dest[0], dest[1]);
         double theta = Math.acos(dotProduct / lenProduct);
         // Inverts when facing backwards
-        if (    player.getDirection() == Direction.N && getDirection(dest) == Direction.E ||
+        if (player.getDirection() == Direction.N && getDirection(dest) == Direction.E ||
                 player.getDirection() == Direction.E && getDirection(dest) == Direction.S ||
                 player.getDirection() == Direction.S && getDirection(dest) == Direction.W ||
                 player.getDirection() == Direction.W && getDirection(dest) == Direction.N) {
             theta *= -1;
         }
         // Count how many turns
-        return (int)(theta / (Math.PI / 2));
+        return (int) (theta / (Math.PI / 2));
     }
 
     /**
      * Returns the cost for to reach the given branch.
+     *
      * @param player The player's instance
-     * @param to The destination block coordinates
+     * @param to     The destination block coordinates
      * @return The cost estimation tho reach the tile
      */
     private int getCost(Player player, int[] to) {
@@ -365,6 +439,15 @@ public class HeuristicAgent implements Agent {
         if (visited[to[0]][to[1]]) {
             if (player.hasGold()) sum -= 5;
             else sum += 5;
+        } else if (noTrespass[to[0]][to[1]]) {
+            sum += 300;
+        } else if (player.hasStench()) {
+            if (canshoot[to[0]][to[1]] < 1) {
+                sum += 10;
+            } else if (canshoot[to[0]][to[1]] == 1) {
+                // Avoid tiles marked as 100% danger
+                sum += 100;
+            }
         } else {
             // If senses a breeze avoid unvisited path
             if (player.hasBreeze()) {
@@ -377,14 +460,13 @@ public class HeuristicAgent implements Agent {
             }
 
             if (player.hasBreeze() && player.hasMoo()) {
-                if(supmuwBenefit[to[0]][to[1]] == 1){
-                    sum+=5;
+                if (supmuwBenefit[to[0]][to[1]] == 1) {
+                    sum += 5;
                 }
                 //Case when you the square has chance of both pit and supmuw. Unless there is other safe way, visit it.
                 else if (supmuwBenefit[to[0]][to[1]] == 1 && pitDangers[to[0]][to[1]] < 1) {
                     sum += 7;
-                }
-                else if (pitDangers[to[0]][to[1]] < 1) {
+                } else if (pitDangers[to[0]][to[1]] < 1) {
                     sum += 10;
                 } else if (pitDangers[to[0]][to[1]] == 1) {
                     // Avoid tiles marked as 100% danger
@@ -393,7 +475,7 @@ public class HeuristicAgent implements Agent {
             }
 
             //If senses a moo and stench, avoid unvisited path
-            if(player.hasMoo() && player.hasStench()){
+            if (player.hasMoo() && player.hasStench()) {
                 if (supmuwDanger[to[0]][to[1]] < 1) {
                     sum += 10;
                 } else if (supmuwDanger[to[0]][to[1]] == 1) {
@@ -403,9 +485,9 @@ public class HeuristicAgent implements Agent {
             }
 
             //If it is visiting lone standing supmuw for the first time it will get some food
-            if(player.hasMoo() && !player.hasStench() && !player.hasBreeze()){
-                if(supmuwBenefit[to[0]][to[1]] == 1){
-                    sum-=5;
+            if (player.hasMoo() && !player.hasStench() && !player.hasBreeze()) {
+                if (supmuwBenefit[to[0]][to[1]] == 1) {
+                    sum -= 5;
                 }
             }
         }
@@ -419,8 +501,9 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Returns the actions that player must take to reach the given destination.
+     *
      * @param player The player's instance
-     * @param to The destination tile coordinates
+     * @param to     The destination tile coordinates
      * @return An array of actions
      */
     private ArrayList<Action> getActionsTo(Player player, int[] to) {
@@ -433,14 +516,14 @@ public class HeuristicAgent implements Agent {
         }
         // Go to the block
         actions.add(Action.GO_FORWARD);
-
         return actions;
     }
-    
+
     /**
      * Returns the actions that player must take to reach the given destination.
+     *
      * @param player The player's instance
-     * @param to The destination tile coordinates
+     * @param to     The destination tile coordinates
      * @return An array of actions
      */
     private ArrayList<Action> getActionsToShoot(Player player, int[] to) {
@@ -459,6 +542,7 @@ public class HeuristicAgent implements Agent {
 
     /**
      * Returns the direction based on the vector coordinates
+     *
      * @param coords The 2D coordinates
      * @return The direction
      */
