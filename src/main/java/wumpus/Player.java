@@ -271,6 +271,8 @@ public class Player extends Object {
         // Senses in the current tile
         if (tile.contains(Environment.Element.GOLD)) {
             perceptions.add(Perception.GLITTER);
+        } else if(tile.contains(Element.FOOD)){
+            perceptions.add(Perception.TASTE);
         }
         else if (tile.contains(Element.SUPMUW) && tile.contains(Element.PIT)){
             perceptions.add(Perception.OUT);
@@ -394,6 +396,10 @@ public class Player extends Object {
      */
     public boolean hasGlitter() {
         return perceptions.contains(Perception.GLITTER);
+    }
+
+    public boolean hasTaste() {
+        return perceptions.contains(Perception.TASTE);
     }
 
     public boolean hasMoo(){

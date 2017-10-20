@@ -115,7 +115,7 @@ public class HeuristicAgent implements Agent {
         // Grab the gold if senses glitter
         if (player.hasGlitter()) return Action.GRAB;
 
-        if (player.getTile().contains(Environment.Element.SUPMUW) && !player.hasFood()) {
+        if (player.hasTaste() && !player.hasFood()) {
             return Action.EAT;
         }
 

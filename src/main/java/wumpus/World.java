@@ -207,6 +207,9 @@ public class World {
         if (element == Element.NOTRESSPASS) {
             noTrespassIndices.add(tile.getIndex());
         }
+        if (element == Element.SUPMUW && !elements.contains(Element.WUMPUS) && !elements.contains(Element.PIT)){
+            elements.add(Element.FOOD);
+        }
         items.put(tile.getIndex(), elements);
     }
 
@@ -462,6 +465,11 @@ public class World {
                                 if (tile.contains(Environment.Element.GOLD)) {
                                     line = line.replace("2",
                                             Environment.getIcon(Perception.GLITTER));
+                                }
+
+                                if (tile.contains(Element.FOOD)) {
+                                    line = line.replace("2",
+                                            Environment.getIcon(Perception.TASTE));
                                 }
                                 // Mark this tile if some of their neighbor has some danger
                                 renderPitsAndWumpus(tile, line);

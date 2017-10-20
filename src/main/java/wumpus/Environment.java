@@ -17,7 +17,7 @@ public class Environment {
      * The perceptions that can be sensed by the player.
      */
     public enum Perception {
-        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO, OUT
+        SCREAM, STENCH, BREEZE, GLITTER, BUMP, NO_ARROWS, MOO, OUT, TASTE
     }
 
     /**
@@ -104,6 +104,7 @@ public class Environment {
     protected static String getIcon(Perception perception) {
         switch (perception) {
             case GLITTER: return "*";
+            case TASTE: return "#";
             case STENCH: return "~";
             case BREEZE: return "â‰ˆ";
             case MOO: return "@";
