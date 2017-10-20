@@ -35,7 +35,7 @@ public class World {
     private int maxSteps = DEFAULT_MAX_STEPS;
     
 
-    private boolean randomize = true;
+    private boolean randomize = false;
     private HashMap<Integer, Set<Element>> items = new HashMap<Integer, Set<Element>>();
 
     private String agentName;
